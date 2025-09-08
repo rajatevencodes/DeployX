@@ -1,0 +1,31 @@
+# Node modules (ignore in all folders)
+**/node_modules/
+
+# Environment files (ignore all .env except .env.local)
+**/.env
+!**/.env.local
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist/
+build/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Misc
+.env.*
+!.env.local

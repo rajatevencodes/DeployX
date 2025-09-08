@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>deployx</title>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div id="loader">
+        <h1 class="loader-text">deployx</h1>
+    </div>
+    <div id="vanta-background"></div>
+    <div class="overlay-mask"></div>
+    <div class="main-content">
+        <div class="input-container">
+            <button id="testCredentialsBtn" class="test-credentials-btn">Fill Test Credentials</button>
+            <input type="text" id="urlInput" placeholder="Github Repo URL" class="url-input">
+            <input type="text" id="projectNameInput" placeholder="Subdomain" class="url-input">
+            <button id="validateBtn" class="validate-btn" disabled>Deploy</button>
+        </div>
+        <div id="logsContainer" class="logs-container hidden">
+            <pre class="logs-content">
+                <div id="logsContent"></div>
+            </pre>
+        </div>
+        <div id="urlDisplay" class="url-display">
+            <a id="deployedUrl" target="_blank" rel="noopener noreferrer"></a>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.topology.min.js"></script>
+
+    <script type="module" src="./src/script.js"></script>
+</body>
+
+</html>

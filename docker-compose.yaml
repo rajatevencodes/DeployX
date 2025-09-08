@@ -1,0 +1,52 @@
+services:
+  frontend:
+    build:
+      context: ./deployx-final-frontend
+    image: deployx-frontend-image
+    container_name: deployx-frontend-container
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - deployx-net
+    environment:
+      - VITE_API_URL=http://localhost:4571
+      - VITE_SOCKET_URL=http://localhost:4571
+
+  backend:
+    build:
+      context: ./main-deployx
+    image: main-deployx-image
+    container_name: main-deployx-container
+    ports:
+      - "4571:4571"
+    restart: unless-stopped
+    networks:
+      - deployx-net
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - ECS_CLUSTER_NAME=${ECS_CLUSTER_NAME}
+      - ECS_TASK_DEFINITION=${ECS_TASK_DEFINITION}
+      - ECS_CLUSTER_SUBNETS_1=${ECS_CLUSTER_SUBNETS_1}
+      - ECS_CLUSTER_SUBNETS_2=${ECS_CLUSTER_SUBNETS_2}
+      - ECS_CLUSTER_SUBNETS_3=${ECS_CLUSTER_SUBNETS_3}
+      - ECS_CLUSTER_SECURITY_GROUP=${ECS_CLUSTER_SECURITY_GROUP}
+      - DOTENV
+
+  reverse-proxy:
+    build:
+      context: ./reverse-proxy-s3
+    image: deployx-reverse-proxy-image
+    container_name: deployx-reverse-proxy-container
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - deployx-net
+
+networks:
+  deployx-net:
+    driver: bridge

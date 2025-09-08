@@ -1,0 +1,13 @@
+services:
+  build-server:
+    build: .
+    image: codebase-build-server-img:latest
+    container_name: codebase-build-server-container
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - USER_GIT_REPOSITORY_URL=${USER_GIT_REPOSITORY_URL}
+      - VALKEY_AIVEN_URI=${VALKEY_AIVEN_URI}
