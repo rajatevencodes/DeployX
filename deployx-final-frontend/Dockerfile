@@ -2,6 +2,19 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Accept build arguments for Vite environment variables
+ARG VITE_API_URL
+ARG VITE_SOCKET_URL
+ARG VITE_CURRENT_DOMAIN
+
+# Set as environment variables for Vite build
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SOCKET_URL=${VITE_SOCKET_URL}
+ENV VITE_CURRENT_DOMAIN=${VITE_CURRENT_DOMAIN}
+
+# Debug: Print environment variables to verify they're set
+RUN echo "🔍 Build Args: VITE_API_URL=${VITE_API_URL}, VITE_SOCKET_URL=${VITE_SOCKET_URL}, VITE_CURRENT_DOMAIN=${VITE_CURRENT_DOMAIN}"
+
 # Don't set NODE_ENV=production here - we need devDependencies (vite) for building
 COPY package*.json ./
 RUN npm install

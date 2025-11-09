@@ -2,6 +2,11 @@ services:
   frontend:
     build:
       context: ./deployx-final-frontend
+      # VITE needs this values at build time not at runtime so we are using args to set the values at build time
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:4571}
+        - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:4571}
+        - VITE_CURRENT_DOMAIN=${VITE_CURRENT_DOMAIN:-localhost}
     image: deployx-frontend-image
     container_name: deployx-frontend-container
     ports:
@@ -9,10 +14,6 @@ services:
     restart: unless-stopped
     networks:
       - deployx-net
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:4571}
-      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:4571}
-      - VITE_CURRENT_DOMAIN=${VITE_CURRENT_DOMAIN:-localhost}
 
   backend:
     build:
