@@ -27,5 +27,6 @@ build/
 *.sublime-project
 
 # Misc
-.env.*
+.env
+
 !.env.local
