@@ -1,4 +1,3 @@
-// At the very top of your file to load environment variables from a .env file
 require("dotenv").config();
 
 const express = require("express");
@@ -14,7 +13,8 @@ const port = process.env.PORT || 4571;
 app.use(express.json());
 app.use(
   cors({
-    origin: "*",
+    origin: process.env.FRONTEND_URL || "*", // Change FRONTEND_URL in .env for production
+    credentials: true,
   })
 );
 
@@ -36,26 +36,54 @@ const ARN_Config = {
 // Check if the connection URI is provided before creating the client
 if (!process.env.VALKEY_AIVEN_URI) {
   console.error(
-    "Valkey/Redis URI is not defined. Please set VALKEY_AIVEN_URI in your environment variables."
+    "⚠️ Valkey/Redis URI is not defined. Real-time logs will not be available."
   );
-  process.exit(1); // Exit the app if the database connection string is missing
 }
-const valkey = new Valkey(process.env.VALKEY_AIVEN_URI);
 
-// Add event listeners for better debugging
-valkey.on("connect", () => {
-  console.log("✅ Connected to Valkey/Redis successfully!");
-});
-valkey.on("error", (err) => {
-  console.error("❌ Valkey/Redis connection error:", err);
-});
+let valkey = null;
+let valkeyConnected = false;
+
+// Only create Valkey client if URI is provided
+if (process.env.VALKEY_AIVEN_URI) {
+  valkey = new Valkey(process.env.VALKEY_AIVEN_URI, {
+    retryStrategy: (times) => {
+      const delay = Math.min(times * 1000, 30000); // Max 30 seconds between retries
+      console.log(`🔄 Valkey reconnection attempt ${times}, retrying in ${delay}ms...`);
+      return delay;
+    },
+    maxRetriesPerRequest: null, // Keep retrying indefinitely
+  });
+
+  // Add event listeners for better debugging
+  valkey.on("connect", () => {
+    console.log("✅ Connected to Valkey/Redis successfully!");
+    valkeyConnected = true;
+  });
+
+  valkey.on("ready", () => {
+    console.log("✅ Valkey/Redis is ready!");
+    valkeyConnected = true;
+  });
+
+  valkey.on("error", (err) => {
+    console.error("❌ Valkey/Redis connection error:", err.message);
+    valkeyConnected = false;
+    // Don't exit - just log the error
+  });
+
+  valkey.on("close", () => {
+    console.log("⚠️ Valkey/Redis connection closed. Will retry...");
+    valkeyConnected = false;
+  });
+}
 
 // --- Socket.IO Server ---
 // Attach Socket.IO to the same HTTP server used by Express
 const server = http.createServer(app); // Create an HTTP server using the Express app
 const io = new Server(server, {
   cors: {
-    origin: "*", // Be cautious with "*" in a production environment
+    origin: process.env.FRONTEND_URL || "*", // Change FRONTEND_URL in .env for production
+    credentials: true,
   },
 });
 
@@ -102,7 +130,7 @@ app.post("/deploy", async (req, res) => {
     overrides: {
       containerOverrides: [
         {
-          name: "codebase-build-server-img", // ! Ensure this matches your image name in the AWS ECR
+          name: process.env.ECS_CONTAINER_NAME || "codebase-build-server-img", // ! Ensure this matches your image name in the AWS ECR
           environment: [
             { name: "PROJECT_ID", value: PROJECT_ID },
             { name: "USER_GIT_REPOSITORY_URL", value: USER_GIT_REPOSITORY_URL },
@@ -136,23 +164,35 @@ app.post("/deploy", async (req, res) => {
 
 // --- Valkey (Redis) Subscriber Logic ---
 async function initValkeySubscriber() {
-  console.log("📡 Subscribing to log channel pattern 'deployx:logs:*'");
-  // Subscribe to the pattern 'deployx:logs:*' to receive messages for all projects
-  await valkey.psubscribe("deployx:logs:*");
+  if (!valkey) {
+    console.log("⚠️ Valkey not configured. Real-time logs will not be available.");
+    return;
+  }
 
-  valkey.on("pmessage", (pattern, channel, message) => {
-    console.log(`Received message from [${channel}]`);
+  try {
+    console.log("📡 Subscribing to log channel pattern 'deployx:logs:*'");
+    // Subscribe to the pattern 'deployx:logs:*' to receive messages for all projects
+    await valkey.psubscribe("deployx:logs:*");
 
-    // E.g., from 'deployx:logs:project-123' we get 'project-123'.
-    const projectId = channel.split(":")[2];
+    valkey.on("pmessage", (pattern, channel, message) => {
+      console.log(`Received message from [${channel}]`);
 
-    if (projectId) {
-      // Emit the message to the correct Socket.IO room using the extracted projectId.
-      // Use a clear event name like "log" instead of "message:".
-      io.to(projectId).emit("log", message);
-      console.log(`=> Log for project ${projectId}: ${message}`);
-    }
-  });
+      // E.g., from 'deployx:logs:project-123' we get 'project-123'.
+      const projectId = channel.split(":")[2];
+
+      if (projectId) {
+        // Emit the message to the correct Socket.IO room using the extracted projectId.
+        // Use a clear event name like "log" instead of "message:".
+        io.to(projectId).emit("log", message);
+        console.log(`=> Log for project ${projectId}: ${message}`);
+      }
+    });
+  } catch (error) {
+    console.error("⚠️ Failed to subscribe to Valkey channels:", error.message);
+    console.log("🔄 Will retry when connection is established...");
+    // Retry after a delay
+    setTimeout(initValkeySubscriber, 5000);
+  }
 }
 
 // --- Start the server ---
@@ -160,5 +200,14 @@ server.listen(port, () => {
   console.log(
     `🚀 API Server with Socket.IO is running on http://localhost:${port}`
   );
-  initValkeySubscriber().catch(console.error);
+  
+  // Initialize Valkey subscriber (non-blocking)
+  if (valkey) {
+    initValkeySubscriber().catch((error) => {
+      console.error("⚠️ Failed to initialize Valkey subscriber:", error.message);
+      console.log("🔄 Server will continue running. Real-time logs may be delayed.");
+    });
+  } else {
+    console.log("⚠️ Valkey not configured. Deployments will work but logs won't be real-time.");
+  }
 });

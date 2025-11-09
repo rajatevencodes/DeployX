@@ -10,8 +10,9 @@ services:
     networks:
       - deployx-net
     environment:
-      - VITE_API_URL=http://localhost:4571
-      - VITE_SOCKET_URL=http://localhost:4571
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:4571}
+      - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:4571}
+      - VITE_CURRENT_DOMAIN=${VITE_CURRENT_DOMAIN:-localhost}
 
   backend:
     build:
@@ -24,6 +25,7 @@ services:
     networks:
       - deployx-net
     environment:
+      - PORT=${PORT:-4571}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION}
@@ -34,7 +36,9 @@ services:
       - ECS_CLUSTER_SUBNETS_2=${ECS_CLUSTER_SUBNETS_2}
       - ECS_CLUSTER_SUBNETS_3=${ECS_CLUSTER_SUBNETS_3}
       - ECS_CLUSTER_SECURITY_GROUP=${ECS_CLUSTER_SECURITY_GROUP}
-      - DOTENV
+      - ECS_CONTAINER_NAME=${ECS_CONTAINER_NAME:-codebase-build-server-img}
+      - VALKEY_AIVEN_URI=${VALKEY_AIVEN_URI}
+      - FRONTEND_URL=${FRONTEND_URL:-*}
 
   reverse-proxy:
     build:
@@ -46,6 +50,10 @@ services:
     restart: unless-stopped
     networks:
       - deployx-net
+    environment:
+      - REVERSE_PROXY_PORT=${REVERSE_PROXY_PORT:-80}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-deployx-bucket}
+      - AWS_REGION=${AWS_REGION:-ap-south-1}
 
 networks:
   deployx-net:

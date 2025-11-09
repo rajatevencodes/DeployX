@@ -2,7 +2,7 @@
 
 ## Core Problem
 
-- To build a platform like Vercel, you must store each deployed project in its own unique subfolder within a single S3 bucket (e.g., `/project-id-1/`, `/project-id-2/`).
+- To build a platform like Vercel, We must store each deployed project in its own unique subfolder within a single S3 bucket (e.g., `/project-id-1/`, `/project-id-2/`).
 
 - The problem is that the project's code, such as its `index.html` file, is built to find its assets (like CSS and JavaScript) at the root path (e.g., `/assets/script.js`).
 

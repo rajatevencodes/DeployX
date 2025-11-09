@@ -2,13 +2,13 @@
 
 A self-hosted Vercel clone that automates building and deploying web applications to your AWS infrastructure. It provides real-time build logs and instant access to deployed sites.
 
-## 🎥 Demo Video
-
-[![DeployX Demo](https://ik.imagekit.io/5wegcvcxp/Resume-Deployx/Resume-deployx.png?updatedAt=1757291325420)](https://photos.app.goo.gl/WnhL8X7Aokq6MYix7)
-
 ## 🏗️ Architecture
 
 ![Architecture Diagram](https://ik.imagekit.io/5wegcvcxp/Resume-Deployx/Architecture.png?updatedAt=1757291326020)
+
+## 🎥 Demo Video
+
+[![DeployX Demo](https://ik.imagekit.io/5wegcvcxp/Resume-Deployx/Resume-deployx.png?updatedAt=1757291325420)](https://photos.app.goo.gl/WnhL8X7Aokq6MYix7)
 
 - **Frontend**: A Vite-based React application for the user interface.
 - **Main Backend**: An Express.js server with Socket.IO for managing deployments.

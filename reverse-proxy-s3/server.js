@@ -2,10 +2,11 @@ const express = require("express");
 const httpProxy = require("http-proxy");
 
 const app = express();
-const PORT = 80; // On Production this should be 80 or 443 - Nginx
+const PORT = process.env.REVERSE_PROXY_PORT || 80; // On Production this should be 80 or 443 - Nginx
 
-BUCKET_NAME = "deployx-bucket";
-BUCKET_REGION = "ap-south-1";
+// Environment-based configuration for production deployment
+BUCKET_NAME = process.env.S3_BUCKET_NAME || "deployx-bucket";
+BUCKET_REGION = process.env.AWS_REGION || "ap-south-1";
 BUCKET_URL = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/builds`;
 
 const proxy = httpProxy.createProxy();

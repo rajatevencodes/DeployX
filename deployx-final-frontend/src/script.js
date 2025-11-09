@@ -103,6 +103,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // --- Show No Logs Warning ---
+  function showNoLogsWarning() {
+    const warningEntry = document.createElement("div");
+    warningEntry.className = "log-entry warning-log";
+    warningEntry.style.color = "#ffa500";
+    warningEntry.innerHTML =
+      "⚠️ Real-time logs are currently unavailable. The deployment is still running in the background. \n The link will be shown soon and will work soon. Maximum wait time: 1 minute 🤟";
+    logsContent.appendChild(warningEntry);
+
+    // Auto-scroll to the bottom
+    logsContainer.scrollTo({
+      top: logsContainer.scrollHeight,
+      behavior: "smooth",
+    });
+  }
+
   // --- Append Log ---
   function appendLog(data, onSuccess) {
     try {
@@ -114,6 +130,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const loadingLog = logsContent.querySelector(".loading-log");
       if (loadingLog) {
         loadingLog.remove();
+      }
+
+      // Remove warning log if it exists (logs are now coming through)
+      const warningLog = logsContent.querySelector(".warning-log");
+      if (warningLog) {
+        warningLog.remove();
       }
 
       const logEntry = document.createElement("div");
@@ -165,8 +187,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300); // Add confetti shortly after
       };
 
-      // Set a timeout to show the URL after 15 seconds, regardless of log status
-      setTimeout(completeDeployment, 20000);
+      // Show warning if no logs received within 10 seconds
+      let noLogsWarningShown = false;
+      setTimeout(() => {
+        const hasRealLogs = Array.from(logsContent.children).some(
+          (entry) =>
+            !entry.classList.contains("loading-log") &&
+            !entry.classList.contains("warning-log")
+        );
+        if (!hasRealLogs && !noLogsWarningShown) {
+          noLogsWarningShown = true;
+          showNoLogsWarning();
+        }
+      }, 10000);
+
+      // Set a timeout to show the URL after 20 seconds, regardless of log status
+      setTimeout(completeDeployment, 23000);
 
       try {
         const result = await deployRepository(url, projectName);

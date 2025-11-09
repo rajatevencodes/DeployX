@@ -20,26 +20,84 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PROJECT_ID = process.env.PROJECT_ID;
 
-// Valkey for Logs
+// Valkey for Logs - with graceful failure handling
 import Valkey from "ioredis";
-const URI = process.env.VALKEY_AIVEN_URI;
-const valkey = new Valkey(URI);
-// This catches background connection errors and prevents crashes.
-valkey.on("error", (err) => {
-  console.error("⚠️ Valkey Connection Error:", err.message);
-});
 
-// ✨ MODIFIED FUNCTION ✨
+let valkey = null;
+let valkeyConnected = false;
+
+// Only create Valkey client if URI is provided
+if (process.env.VALKEY_AIVEN_URI) {
+  valkey = new Valkey(process.env.VALKEY_AIVEN_URI, {
+    retryStrategy: (times) => {
+      // Retry up to 10 times for build server (faster timeout)
+      if (times > 10) {
+        console.log(
+          "⚠️ Valkey connection failed after 10 attempts. Continuing without logs."
+        );
+        return null; // Stop retrying
+      }
+      const delay = Math.min(times * 500, 5000); // Max 5 seconds between retries
+      console.log(
+        `🔄 Valkey reconnection attempt ${times}, retrying in ${delay}ms...`
+      );
+      return delay;
+    },
+    connectTimeout: 10000, // 10 second connection timeout
+    maxRetriesPerRequest: 3,
+  });
+
+  valkey.on("connect", () => {
+    console.log("✅ Connected to Valkey/Redis successfully!");
+    valkeyConnected = true;
+  });
+
+  valkey.on("ready", () => {
+    console.log("✅ Valkey/Redis is ready!");
+    valkeyConnected = true;
+  });
+
+  valkey.on("error", (err) => {
+    console.error("⚠️ Valkey Connection Error:", err.message);
+    valkeyConnected = false;
+    // Don't crash - just continue without logs
+  });
+
+  valkey.on("close", () => {
+    console.log("⚠️ Valkey connection closed.");
+    valkeyConnected = false;
+  });
+} else {
+  console.log(
+    "⚠️ Valkey URI not provided. Build will continue without real-time logs."
+  );
+}
+
+// Non-blocking log publishing
 async function publishLogs(log) {
+  if (!valkey) {
+    // No Valkey configured - just skip logging
+    return;
+  }
+
   try {
-    // We try to publish the log.
-    await valkey.publish(`deployx:logs:${PROJECT_ID}`, JSON.stringify({ log }));
+    // Try to publish the log (with short timeout)
+    await Promise.race([
+      valkey.publish(`deployx:logs:${PROJECT_ID}`, JSON.stringify({ log })),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Publish timeout")), 2000)
+      ),
+    ]);
   } catch (error) {
-    // If it fails, we log the error to the console but DO NOT stop the process.
-    console.error(
-      "⚠️ Valkey log publishing failed, continuing build...",
-      error.message
-    );
+    // If it fails, we log to console but DO NOT stop the build process
+    // Only log occasionally to avoid spam
+    if (Math.random() < 0.1) {
+      // Log 10% of failures to reduce noise
+      console.error(
+        "⚠️ Valkey log publishing failed, continuing build...",
+        error.message
+      );
+    }
   }
 }
 // ---------------

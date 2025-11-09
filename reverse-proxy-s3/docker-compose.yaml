@@ -1,7 +1,0 @@
-services:
-  s3-proxy:
-    build: .
-    image: reverse-proxy-s3-img
-    container_name: reverse-proxy-s3-container
-    ports:
-      - "80:80"
