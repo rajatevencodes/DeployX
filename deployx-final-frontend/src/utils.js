@@ -47,7 +47,7 @@ export function updateValidationUI(
 
 // Test credentials function
 export function fillTestCredentials(urlInput, projectNameInput) {
-  const testUrl = `https://github.com/rajatevencodes/test-vite-deployx.git`;
+  const testUrl = `https://github.com/rajatevencodes/MarioGame.git`;
 
   // Generate random project name
   const randomProjectName = generate();
