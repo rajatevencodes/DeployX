@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function showDeployedUrl() {
     let deployedUrlText;
     // Use HTTPS for deployed URLs
-    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
     if (window.deploymentProjectId) {
       deployedUrlText = `${protocol}//${window.deploymentProjectId}.${env.currentDomain}`;
     } else {
@@ -111,25 +111,24 @@ document.addEventListener("DOMContentLoaded", function () {
     warningEntry.className = "log-entry warning-log";
     warningEntry.style.color = "#ffa500";
     let countdown = 60;
-    warningEntry.innerHTML =
-      `⚠️ Real-time logs are currently unavailable. The deployment is still running in the background. We are trying to connect to the container and get the logs.<br>
+    warningEntry.innerHTML = `⚠️ Real-time logs are currently unavailable. The deployment is still running in the background. We are trying to connect to the container and get the logs.<br>
       The link will be shown soon and will work soon. Maximum wait time: <span id="countdown">${countdown}</span> seconds 🤟<br>
       <span id="try-url-message" style="display: none; color: #00ff00; margin-top: 10px;">✅ You can now try the URL below.</span>`;
-    
-    const countdownElement = warningEntry.querySelector('#countdown');
-    const tryUrlMessage = warningEntry.querySelector('#try-url-message');
-    
+
+    const countdownElement = warningEntry.querySelector("#countdown");
+    const tryUrlMessage = warningEntry.querySelector("#try-url-message");
+
     const countdownInterval = setInterval(() => {
       countdown--;
       if (countdownElement) {
-      countdownElement.textContent = countdown;
+        countdownElement.textContent = countdown;
       }
-      
+
       if (countdown <= 0) {
-      clearInterval(countdownInterval);
-      if (tryUrlMessage) {
-        tryUrlMessage.style.display = 'block';
-      }
+        clearInterval(countdownInterval);
+        if (tryUrlMessage) {
+          tryUrlMessage.style.display = "block";
+        }
       }
     }, 1000);
     logsContent.appendChild(warningEntry);
