@@ -46,8 +46,12 @@ export function updateValidationUI(
 }
 
 // Test credentials function
+const testUrls = [
+  `https://github.com/rajatevencodes/MarioGame.git`,
+  `https://github.com/MisterPrada/morph-particles`,
+];
 export function fillTestCredentials(urlInput, projectNameInput) {
-  const testUrl = `https://github.com/rajatevencodes/MarioGame.git`;
+  const testUrl = testUrls[Math.floor(Math.random() * testUrls.length)];
 
   // Generate random project name
   const randomProjectName = generate();
