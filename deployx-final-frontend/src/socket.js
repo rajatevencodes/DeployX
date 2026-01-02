@@ -2,7 +2,12 @@ import { io } from "socket.io-client";
 import { env } from "./env.js";
 
 // Connect to your backend server.
-const socket = io(env.socketURL);
+// Socket.IO automatically appends /socket.io/ to the URL
+// If socketURL is https://rajat-deployx.xyz, it connects to https://rajat-deployx.xyz/socket.io/
+const socket = io(env.socketURL, {
+  path: '/socket.io/',
+  transports: ['websocket', 'polling']
+});
 
 // Store the current project ID and callback
 let currentProjectId = null;

@@ -77,11 +77,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- Show Deployed URL ---
   function showDeployedUrl() {
     let deployedUrlText;
+    // Use HTTPS for deployed URLs
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
     if (window.deploymentProjectId) {
-      deployedUrlText = `http://${window.deploymentProjectId}.${env.currentDomain}`;
+      deployedUrlText = `${protocol}//${window.deploymentProjectId}.${env.currentDomain}`;
     } else {
       const projectName = projectNameInput.value.trim();
-      deployedUrlText = `http://${projectName}.${env.currentDomain}`;
+      deployedUrlText = `${protocol}//${projectName}.${env.currentDomain}`;
     }
     deployedUrl.textContent = deployedUrlText;
     deployedUrl.href = deployedUrlText;
